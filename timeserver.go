@@ -131,6 +131,39 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling logout page.")
+	cookie, error := r.Cookie(COOKIE_NAME)
+	if error != nil { // no cookie found
+		
+	} else { // delete name from loggedInNames
+		uuid := cookie.Value
+		mutex.Lock()
+		if name, ok := loggedInNames[uuid]; ok {
+			delete(loggedInNames, uuid)
+			log.Println("Deleted %s from loggedInNames.", name)
+		}
+		mutex.Unlock()
+		
+	}
+	
+	// clear cookie
+	cookie = &http.Cookie {Name : COOKIE_NAME, MaxAge : -1}
+	http.SetCookie(w, cookie)
+
+	// display goodbye message
+	goodByeContent := `
+<html>
+<head>
+<META http-equiv="refresh" content="10;URL=/">
+<body>
+<p>Good-bye.</p>
+</body>
+</html>
+`
+	fmt.Fprintf(w, goodByeContent)
+}
+
 func main() {
 	portPtr := flag.Int("port", 8080, "http server port number")
 	versionPtr := flag.Bool("v", false, "Display version number")
@@ -146,6 +179,7 @@ func main() {
 	http.HandleFunc("/index.html", handleIndex)
 	http.HandleFunc("/uuid", handleUUID)
 	http.HandleFunc("/login", handleLogin)
+	http.HandleFunc("/logout", handleLogout)
 
 	error := http.ListenAndServe(fmt.Sprintf(":%v", *portPtr), nil)
 	if error != nil {
