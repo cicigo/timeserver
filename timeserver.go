@@ -17,7 +17,7 @@ import (
 	"log"
 )
 
-var loggedInIds map[string]string
+var loggedInNames map[string]string
 
 func uuid() string {
 	out, error := exec.Command("/usr/bin/uuidgen").Output()
@@ -89,10 +89,25 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if error != nil {
 		log.Println("No cookie found")
 		fmt.Fprintf(w, loginForm)
-	} else if name, ok := loggedInIds[cookie.Value]; ok {
+	} else if name, ok := loggedInNames[cookie.Value]; ok {
 		fmt.Fprintf(w, fmt.Sprintf(greetings, name))
 	} else {
 		fmt.Fprintf(w, loginForm)
+	}
+	
+}
+
+func handleLogin(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling login page.")
+	name := r.FormValue("name")
+	if name == "" {
+		log.Println("log in name is empty")
+		fmt.Fprintf(w, "C'mon, I need a name")
+	} else {
+		log.Println("log in name is", name)
+		loggedInNames[name] = uuid()
+		// TODO: redirect
+		fmt.Fprintf(w, fmt.Sprintf("Greeting, %s", name))
 	}
 	
 }
@@ -111,6 +126,7 @@ func main() {
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/index.html", handleIndex)
 	http.HandleFunc("/uuid", handleUUID)
+	http.HandleFunc("/login", handleLogin)
 
 	error := http.ListenAndServe(fmt.Sprintf(":%v", *portPtr), nil)
 	if error != nil {
