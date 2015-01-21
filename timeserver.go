@@ -10,18 +10,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html"
+	"log"
 	"net/http"
 	"os"
-	"time"
 	"os/exec"
-	"log"
-	"sync"
 	"strings"
-	"html"
+	"sync"
+	"time"
 )
 
 var loggedInNames = make(map[string]string)
 var mutex = &sync.Mutex{}
+
 const COOKIE_NAME string = "UUID"
 
 // generate an universally unique identifier
@@ -49,24 +50,24 @@ func getUUIDFromCookie(r *http.Request) (string, bool) {
 func getNameFromCookie(r *http.Request) (string, bool) {
 	if uuid, ok := getUUIDFromCookie(r); ok {
 		mutex.Lock()
-		defer mutex.Unlock()	
+		defer mutex.Unlock()
 		name, nameOk := loggedInNames[uuid]
 		return name, nameOk
 	} else {
 		return "", false
 	}
-	
+
 }
 
 // set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling time request.")
-	
+
 	const layout = "3:04:05PM"
 	t := time.Now()
 	var message string
 	if name, ok := getNameFromCookie(r); ok {
-		message = fmt.Sprintf(`The time is now <span class="time">%s</span>, %s.`, 
+		message = fmt.Sprintf(`The time is now <span class="time">%s</span>, %s.`,
 			t.Format(layout), name)
 	} else {
 		message = fmt.Sprintf(`The time is now <span class="time">%s</span>.`, t.Format(layout))
@@ -145,14 +146,14 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "C'mon, I need a name")
 	} else {
 		log.Println("log in name is", name)
-		
+
 		uuid := uuid()
 		mutex.Lock()
 		loggedInNames[uuid] = name
 		mutex.Unlock()
 		// Set cookie
-		
-		cookie := http.Cookie {Name : COOKIE_NAME, Value : uuid}
+
+		cookie := http.Cookie{Name: COOKIE_NAME, Value: uuid}
 		http.SetCookie(w, &cookie)
 
 		// redirect to homepage
@@ -164,16 +165,16 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 // logout page handler
 func handleLogout(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling logout request.")
-	
-	// if uuid found in cookie, delete it from loggedInNames 
-	if uuid, ok := getUUIDFromCookie(r); ok { 
+
+	// if uuid found in cookie, delete it from loggedInNames
+	if uuid, ok := getUUIDFromCookie(r); ok {
 		mutex.Lock()
 		delete(loggedInNames, uuid)
 		mutex.Unlock()
 	}
-	
+
 	// clear cookie
-	cookie := http.Cookie {Name : COOKIE_NAME, MaxAge : -1}
+	cookie := http.Cookie{Name: COOKIE_NAME, MaxAge: -1}
 	http.SetCookie(w, &cookie)
 
 	// display goodbye message
