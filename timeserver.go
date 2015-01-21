@@ -19,6 +19,8 @@ import (
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	const layout = "3:04:05PM"
 	t := time.Now()
+	const utcLayout = "15:04:05 UTC"
+	utc := t.UTC()
 	content := fmt.Sprintf(`
         <html>
 	<head>
@@ -28,9 +30,9 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 	</style>
 	</head>
 	<body>
-	<p>The time is now <span class="time">%s</span>.</p>
+	<p>The time is now <span class="time">%s</span>(%s).</p>
 	</body>
-	</html>`, t.Format(layout))
+	</html>`, t.Format(layout), utc.Format(utcLayout))
 
 	fmt.Fprintf(w, content)
 }
@@ -54,7 +56,7 @@ func main() {
 	flag.Parse()
 
 	if *versionPtr {
-		fmt.Println("1.0.0")
+		fmt.Println("1.1.0")
 		return
 	}
 
