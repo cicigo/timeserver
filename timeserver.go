@@ -57,9 +57,17 @@ func getNameFromCookie(r *http.Request) (string, bool) {
 //handleTime: set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling time request.")
-		
+	
 	const layout = "3:04:05PM"
 	t := time.Now()
+	var message string
+	if name, ok := getNameFromCookie(r); ok {
+		message = fmt.Sprintf(`The time is now <span class="time">%s</span>, %s.`, 
+			t.Format(layout), name)
+	} else {
+		message = fmt.Sprintf(`The time is now <span class="time">%s</span>.`, t.Format(layout))
+	}
+
 	content := fmt.Sprintf(`
         <html>
 	<head>
@@ -69,9 +77,9 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 	</style>
 	</head>
 	<body>
-	<p>The time is now <span class="time">%s</span>.</p>
+	<p>%s</p>
 	</body>
-	</html>`, t.Format(layout))
+	</html>`, message)
 
 	fmt.Fprintf(w, content)
 }
