@@ -31,10 +31,33 @@ func uuid() string {
 	return strings.Trim(string(out[:]), "\n ")
 }
 
+func getUUIDFromCookie(r *http.Request) (string, bool) {
+	cookie, error := r.Cookie(COOKIE_NAME)
+
+	if error != nil {
+		log.Println("No cookie found")
+		return "", false
+	} else {
+		return cookie.Value, true
+	}
+}
+
+func getNameFromCookie(r *http.Request) (string, bool) {
+	if uuid, ok := getUUIDFromCookie(r); ok {
+		mutex.Lock()
+		defer mutex.Unlock()	
+		name, nameOk := loggedInNames[uuid]
+		return name, nameOk
+	} else {
+		return "", false
+	}
+	
+}
 
 //handleTime: set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling time request.")
+		
 	const layout = "3:04:05PM"
 	t := time.Now()
 	content := fmt.Sprintf(`
@@ -87,24 +110,11 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 </html>
 `
 	greetings := `Greetings, %s`
-	
-	cookie, error := r.Cookie(COOKIE_NAME)
-
-	if error != nil {
-		log.Println("No cookie found")
-		fmt.Fprintf(w, loginForm)
+	if name, ok := getNameFromCookie(r); ok {
+		fmt.Fprintf(w, fmt.Sprintf(greetings, name))
 	} else {
-		mutex.Lock()
-		uuid := cookie.Value
-		name, ok := loggedInNames[uuid]
-		mutex.Unlock()
-		if ok { // name is logged in
-			fmt.Fprintf(w, fmt.Sprintf(greetings, name))
-		} else {
-			fmt.Fprintf(w, loginForm)
-		}
+		fmt.Fprintf(w, loginForm)
 	}
-	
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -133,23 +143,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling logout page.")
-	cookie, error := r.Cookie(COOKIE_NAME)
-	if error != nil { // no cookie found
-		
-	} else { // delete name from loggedInNames
-		uuid := cookie.Value
+	
+	// if uuid found in cookie, delete it from loggedInNames 
+	if uuid, ok := getUUIDFromCookie(r); ok { 
 		mutex.Lock()
-		if name, ok := loggedInNames[uuid]; ok {
-			delete(loggedInNames, uuid)
-			log.Println("Deleted %s from loggedInNames.", name)
-		}
+		delete(loggedInNames, uuid)
 		mutex.Unlock()
-		
 	}
 	
 	// clear cookie
-	cookie = &http.Cookie {Name : COOKIE_NAME, MaxAge : -1}
-	http.SetCookie(w, cookie)
+	cookie := http.Cookie {Name : COOKIE_NAME, MaxAge : -1}
+	http.SetCookie(w, &cookie)
 
 	// display goodbye message
 	goodByeContent := `
