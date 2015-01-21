@@ -13,7 +13,18 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"os/exec"
+	"log"
 )
+
+func uuid() string {
+	out, error := exec.Command("/usr/bin/uuidgen").Output()
+	if error != nil {
+		log.Fatal(error)
+	}
+	return string(out[:])
+}
+
 
 //handleTime: set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +59,10 @@ func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, content)
 }
 
+func handleUUID(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, uuid())
+}
+
 func main() {
 	portPtr := flag.Int("port", 8080, "http server port number")
 	versionPtr := flag.Bool("v", false, "Display version number")
@@ -60,6 +75,7 @@ func main() {
 
 	http.HandleFunc("/time", handleTime)
 	http.HandleFunc("/", handleNotFound)
+	http.HandleFunc("/uuid", handleUUID)
 
 	error := http.ListenAndServe(fmt.Sprintf(":%v", *portPtr), nil)
 	if error != nil {
