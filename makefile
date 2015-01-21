@@ -14,3 +14,6 @@ run: build
 
 clean: 
 	rm -rf bin
+
+version: build
+	bin/timeserver -v
