@@ -23,6 +23,7 @@ var loggedInNames = make(map[string]string)
 var mutex = &sync.Mutex{}
 const COOKIE_NAME string = "UUID"
 
+// generate an universally unique identifier
 func uuid() string {
 	out, error := exec.Command("/usr/bin/uuidgen").Output()
 	if error != nil {
@@ -31,6 +32,7 @@ func uuid() string {
 	return strings.Trim(string(out[:]), "\n ")
 }
 
+// get UUID from request cookie
 func getUUIDFromCookie(r *http.Request) (string, bool) {
 	cookie, error := r.Cookie(COOKIE_NAME)
 
@@ -42,6 +44,7 @@ func getUUIDFromCookie(r *http.Request) (string, bool) {
 	}
 }
 
+// get login name from cookie
 func getNameFromCookie(r *http.Request) (string, bool) {
 	if uuid, ok := getUUIDFromCookie(r); ok {
 		mutex.Lock()
@@ -54,7 +57,7 @@ func getNameFromCookie(r *http.Request) (string, bool) {
 	
 }
 
-//handleTime: set up webpage format and display the current time
+// set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling time request.")
 	
@@ -98,13 +101,15 @@ func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, content)
 }
 
+// uuid page handler, for testing.
 func handleUUID(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling UUID request.")
 	fmt.Fprintf(w, uuid())
 }
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling Index page request.")
+// homepage handler
+func handleHomePage(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling homepage request.")
 	loginForm := `
 <html>
 <body>
@@ -125,8 +130,9 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// login page handler
 func handleLogin(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling login page.")
+	log.Println("Handling login request.")
 	name := r.FormValue("name")
 	if name == "" {
 		log.Println("log in name is empty")
@@ -149,8 +155,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// logout page handler
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling logout page.")
+	log.Println("Handling logout request.")
 	
 	// if uuid found in cookie, delete it from loggedInNames 
 	if uuid, ok := getUUIDFromCookie(r); ok { 
@@ -187,8 +194,8 @@ func main() {
 	}
 
 	http.HandleFunc("/time", handleTime)
-	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/index.html", handleIndex)
+	http.HandleFunc("/", handleHomePage)
+	http.HandleFunc("/index.html", handleHomePage)
 	http.HandleFunc("/uuid", handleUUID)
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/logout", handleLogout)
