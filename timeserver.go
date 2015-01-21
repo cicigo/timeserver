@@ -17,6 +17,7 @@ import (
 	"log"
 	"sync"
 	"strings"
+	"html"
 )
 
 var loggedInNames = make(map[string]string)
@@ -138,7 +139,7 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 // login page handler
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling login request.")
-	name := r.FormValue("name")
+	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {
 		log.Println("log in name is empty")
 		fmt.Fprintf(w, "C'mon, I need a name")
