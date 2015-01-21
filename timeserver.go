@@ -125,8 +125,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		cookie := http.Cookie {Name : COOKIE_NAME, Value : uuid}
 		http.SetCookie(w, &cookie)
 
-		// TODO: redirect
-		fmt.Fprintf(w, fmt.Sprintf("Greeting, %s", name))
+		// redirect to homepage
+		http.Redirect(w, r, "/", 302)
+		//fmt.Fprintf(w, fmt.Sprintf("Greeting, %s", name))
 	}
 }
 
