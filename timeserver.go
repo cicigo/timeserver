@@ -16,17 +16,19 @@ import (
 	"os/exec"
 	"log"
 	"sync"
+	"strings"
 )
 
 var loggedInNames = make(map[string]string)
 var mutex = &sync.Mutex{}
+const COOKIE_NAME string = "UUID"
 
 func uuid() string {
 	out, error := exec.Command("/usr/bin/uuidgen").Output()
 	if error != nil {
 		log.Fatal(error)
 	}
-	return string(out[:])
+	return strings.Trim(string(out[:]), "\n ")
 }
 
 
@@ -86,7 +88,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 `
 	greetings := `Greetings, %s`
 	
-	cookie, error := r.Cookie("uuid")
+	cookie, error := r.Cookie(COOKIE_NAME)
 
 	if error != nil {
 		log.Println("No cookie found")
@@ -120,7 +122,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		mutex.Unlock()
 		// Set cookie
 		
-		cookie := http.Cookie {Name : "UUID", Value : uuid}
+		cookie := http.Cookie {Name : COOKIE_NAME, Value : uuid}
 		http.SetCookie(w, &cookie)
 
 		// TODO: redirect
