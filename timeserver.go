@@ -15,9 +15,11 @@ import (
 	"time"
 	"os/exec"
 	"log"
+	"sync"
 )
 
-var loggedInNames map[string]string
+var loggedInNames = make(map[string]string)
+var mutex = &sync.Mutex{}
 
 func uuid() string {
 	out, error := exec.Command("/usr/bin/uuidgen").Output()
@@ -89,10 +91,15 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if error != nil {
 		log.Println("No cookie found")
 		fmt.Fprintf(w, loginForm)
-	} else if name, ok := loggedInNames[cookie.Value]; ok {
-		fmt.Fprintf(w, fmt.Sprintf(greetings, name))
 	} else {
-		fmt.Fprintf(w, loginForm)
+		mutex.Lock()
+		name, ok := loggedInNames[cookie.Value]
+		mutex.Unlock()
+		if ok { // name is logged in
+			fmt.Fprintf(w, fmt.Sprintf(greetings, name))
+		} else {
+			fmt.Fprintf(w, loginForm)
+		}
 	}
 	
 }
@@ -105,7 +112,10 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "C'mon, I need a name")
 	} else {
 		log.Println("log in name is", name)
+		
+		mutex.Lock()
 		loggedInNames[name] = uuid()
+		mutex.Unlock()
 		// TODO: redirect
 		fmt.Fprintf(w, fmt.Sprintf("Greeting, %s", name))
 	}
