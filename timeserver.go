@@ -86,14 +86,15 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 `
 	greetings := `Greetings, %s`
 	
-	cookie, error := r.Cookie("uid")
+	cookie, error := r.Cookie("uuid")
 
 	if error != nil {
 		log.Println("No cookie found")
 		fmt.Fprintf(w, loginForm)
 	} else {
 		mutex.Lock()
-		name, ok := loggedInNames[cookie.Value]
+		uuid := cookie.Value
+		name, ok := loggedInNames[uuid]
 		mutex.Unlock()
 		if ok { // name is logged in
 			fmt.Fprintf(w, fmt.Sprintf(greetings, name))
@@ -113,13 +114,18 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Println("log in name is", name)
 		
+		uuid := uuid()
 		mutex.Lock()
-		loggedInNames[name] = uuid()
+		loggedInNames[uuid] = name
 		mutex.Unlock()
+		// Set cookie
+		
+		cookie := http.Cookie {Name : "UUID", Value : uuid}
+		http.SetCookie(w, &cookie)
+
 		// TODO: redirect
 		fmt.Fprintf(w, fmt.Sprintf("Greeting, %s", name))
 	}
-	
 }
 
 func main() {
