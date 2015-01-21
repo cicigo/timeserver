@@ -109,6 +109,11 @@ func handleUUID(w http.ResponseWriter, r *http.Request) {
 
 // homepage handler
 func handleHomePage(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" && r.URL.Path != "/index.html" {
+		handleNotFound(w, r)
+		return
+	}
+
 	log.Println("Handling homepage request.")
 	loginForm := `
 <html>
