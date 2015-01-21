@@ -30,6 +30,7 @@ func uuid() string {
 
 //handleTime: set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling time request.")
 	const layout = "3:04:05PM"
 	t := time.Now()
 	content := fmt.Sprintf(`
@@ -50,6 +51,7 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling NotFound page.")
 	content :=
 		`
 <html>
@@ -62,10 +64,12 @@ func handleNotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUUID(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling UUID request.")
 	fmt.Fprintf(w, uuid())
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling Index page request.")
 	loginForm := `
 <html>
 <body>
