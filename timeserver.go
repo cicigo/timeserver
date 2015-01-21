@@ -17,6 +17,8 @@ import (
 	"log"
 )
 
+var loggedInIds map[string]string
+
 func uuid() string {
 	out, error := exec.Command("/usr/bin/uuidgen").Output()
 	if error != nil {
@@ -63,6 +65,34 @@ func handleUUID(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, uuid())
 }
 
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	loginForm := `
+<html>
+<body>
+<form action="login">
+  What is your name, Earthling?
+  <input type="text" name="name" size="50">
+  <input type="submit">
+</form>
+</p>
+</body>
+</html>
+`
+	greetings := `Greetings, %s`
+	
+	cookie, error := r.Cookie("uid")
+
+	if error != nil {
+		log.Println("No cookie found")
+		fmt.Fprintf(w, loginForm)
+	} else if name, ok := loggedInIds[cookie.Value]; ok {
+		fmt.Fprintf(w, fmt.Sprintf(greetings, name))
+	} else {
+		fmt.Fprintf(w, loginForm)
+	}
+	
+}
+
 func main() {
 	portPtr := flag.Int("port", 8080, "http server port number")
 	versionPtr := flag.Bool("v", false, "Display version number")
@@ -74,7 +104,8 @@ func main() {
 	}
 
 	http.HandleFunc("/time", handleTime)
-	http.HandleFunc("/", handleNotFound)
+	http.HandleFunc("/", handleIndex)
+	http.HandleFunc("/index.html", handleIndex)
 	http.HandleFunc("/uuid", handleUUID)
 
 	error := http.ListenAndServe(fmt.Sprintf(":%v", *portPtr), nil)
