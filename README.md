@@ -1,16 +1,16 @@
 # TimeServer
 Latest Version: 2.0.0
 
-# Commands
-## Build the project
+# Howtos
+### Install the package
 ```
-	make build
+	make install
 ```
-## Run timeserver
+### Run timeserver
 ```
 	make run
 ```
-## Check timeserver version
+### Check timeserver version
 ```
 	make version
 ```

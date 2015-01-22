@@ -1,19 +1,24 @@
-default: build
+PACKAGES=timeserver
 
-build:
-	go build -o bin/timeserver timeserver.go
+GOPATH=$(CURDIR)
+GODOC_PORT=:6060
+
+all: fmt install
+
+install:
+	GOPATH=$(GOPATH) go install $(PACKAGES)
 
 fmt:
-	go fmt timeserver.go
+	GOPATH=$(GOPATH) go fmt $(PACKAGES)
 
 doc:
-	godoc -http=:6060 -index
+	GOPATH=$(GOPATH) godoc -v --http=$(GODOC_PORT) --index=true
 
-run: build
+clean:
+	rm -rf bin pkg
+
+run: install
 	bin/timeserver
 
-clean: 
-	rm -rf bin
-
-version: build
+version: install
 	bin/timeserver -v
