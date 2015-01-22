@@ -92,6 +92,7 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling NotFound page.")
+	w.WriteHeader(404)
 	content :=
 		`
 <html>
