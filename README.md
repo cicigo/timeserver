@@ -1,7 +1,8 @@
 # TimeServer
-Latest Version: 2.0.0
 
-# Howtos
+## Latest Version: 2.0.0
+
+## Makefile commands
 ### Install the package
 ```
 	make install
@@ -14,19 +15,19 @@ Latest Version: 2.0.0
 ```
 	make version
 ```
-## Clean build
+### Clean build
 ```
 	make clean
 ```
-## Format source code
+### Format source code
 ```
 	make fmt
 ```
 
-# How to use timeserver
+## How to use timeserver
 1. Start timeserver using command `make run`
-2. Access timeserver using the following URL: (http://localhost:8080/)
+2. Access timeserver using the following URL: [http://localhost:8080/]
 3. Login timeserver: put your name in the input text box and click "submit" button
-4. Check current time using the following URL: (http://localhost:8080/time)
-5. Logout timeserver using the following URL: (http://localhost:8080/logout)
+4. Check current time using the following URL: [http://localhost:8080/time]
+5. Logout timeserver using the following URL: [http://localhost:8080/logout]
    
