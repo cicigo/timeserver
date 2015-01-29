@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"html"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -59,39 +60,42 @@ func getNameFromCookie(r *http.Request) (string, bool) {
 
 }
 
+type TimeContent struct {
+	Time string
+	Name string
+}
+
 // set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling time request.")
 
 	const layout = "3:04:05PM"
 	t := time.Now()
-	var message string
-	if name, ok := getNameFromCookie(r); ok {
-		message = fmt.Sprintf(`The time is now <span class="time">%s</span>, %s.`,
-			t.Format(layout), name)
-	} else {
-		message = fmt.Sprintf(`The time is now <span class="time">%s</span>.`, t.Format(layout))
+	name, _ := getNameFromCookie(r)
+	
+	timeContent := TimeContent{
+		Time: t.Format(layout),
+		Name: name,
 	}
 
-	content := fmt.Sprintf(`
-        <html>
-	<head>
-	<style>
-	p {font-size: xx-large}
-	span.time {color: red}
-	</style>
-	</head>
-	<body>
-	<p>%s</p>
-	</body>
-	</html>`, message)
+	tmpl, err := template.New("time").ParseFiles("templates/time.html")
+	if err != nil {
+		fmt.Printf("parsing template failed: %s\n", err)
+		return
+	}
 
-	fmt.Fprintf(w, content)
+	//		var time string = t.Format(layout)
+	err = tmpl.ExecuteTemplate(w, "timeTemplate", timeContent)
+	if err != nil {
+		fmt.Printf("executing template failed: %s\n", err)
+		return
+	}
+
 }
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling NotFound page.")
+	log.Printf("Handling NotFound URL: %s\n", r.URL.Path)
 	w.WriteHeader(404)
 	content :=
 		`
@@ -200,6 +204,9 @@ func main() {
 		fmt.Println("2.0.0")
 		return
 	}
+
+	// handle css
+	http.Handle("/css", http.FileServer(http.Dir("css")))
 
 	http.HandleFunc("/time", handleTime)
 	http.HandleFunc("/", handleHomePage)
