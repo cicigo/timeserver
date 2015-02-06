@@ -10,8 +10,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	log "github.com/cihub/seelog"
 	"html"
-	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -32,7 +32,7 @@ type TimeContent struct {
 
 // set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling time request.")
+	log.Info("Handling time request.")
 
 	const layout = "3:04:05PM"
 	t := time.Now()
@@ -52,7 +52,7 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Handling NotFound URL: %s\n", r.URL.Path)
+	log.Infof("Handling NotFound URL: %s\n", r.URL.Path)
 	w.WriteHeader(404)
 	utils.RenderTemplate(w, "templates/notfound.html", nil)
 }
@@ -64,7 +64,7 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Handling homepage request.")
+	log.Infof("Handling homepage request.")
 
 	if name, ok := utils.GetNameFromCookie(r, loggedInNames, mutex); ok {
 		utils.RenderTemplate(w, "templates/greeting.html", name)
@@ -75,13 +75,13 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 
 // login page handler
 func handleLogin(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling login request.")
+	log.Infof("Handling login request.")
 	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {
-		log.Println("log in name is empty")
+		log.Info("log in name is empty")
 		utils.RenderTemplate(w, "templates/emptyName.html", nil)
 	} else {
-		log.Println("log in name is", name)
+		log.Infof("log in name is %s.", name)
 
 		uuid := utils.Uuid()
 		mutex.Lock()
@@ -100,7 +100,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 // logout page handler
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling logout request.")
+	log.Info("Handling logout request.")
 
 	// if uuid found in cookie, delete it from loggedInNames
 	if uuid, ok := utils.GetUUIDFromCookie(r); ok {
@@ -127,14 +127,14 @@ func main() {
 		return
 	}
 
-	// logger, err := log.LoggerFromConfigAsFile("etc/log.xml")
+	logger, err := log.LoggerFromConfigAsFile("etc/log.xml")
 
-	// if err != nil {
-	// 	fmt.Printf("configure log file: %s\n", err)
-	// 	return
-	// }
+	if err != nil {
+		fmt.Printf("configure log file: %s\n", err)
+		return
+	}
 
-	// log.ReplaceLogger(logger)
+	log.ReplaceLogger(logger)
 
 	// handle css
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
@@ -147,7 +147,7 @@ func main() {
 
 	error := http.ListenAndServe(fmt.Sprintf(":%v", *portPtr), nil)
 	if error != nil {
-		fmt.Printf("Start server with port %d failed: %v\n", *portPtr, error)
+		log.Criticalf("Start server with port %d failed: %v\n", *portPtr, error)
 		os.Exit(1)
 	}
 }

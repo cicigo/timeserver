@@ -1,9 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"html/template"
-	"log"
+	log "github.com/cihub/seelog"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -16,7 +15,7 @@ const COOKIE_NAME string = "UUID"
 func Uuid() string {
 	out, error := exec.Command("/usr/bin/uuidgen").Output()
 	if error != nil {
-		log.Fatal(error)
+		log.Errorf("Uuid generation failed: %s.", error)
 	}
 	return strings.Trim(string(out[:]), "\n ")
 }
@@ -26,7 +25,7 @@ func GetUUIDFromCookie(r *http.Request) (string, bool) {
 	cookie, error := r.Cookie(COOKIE_NAME)
 
 	if error != nil {
-		log.Println("No cookie found")
+		log.Info("No cookie found")
 		return "", false
 	} else {
 		return cookie.Value, true
@@ -49,11 +48,11 @@ func GetNameFromCookie(r *http.Request, loggedInNames map[string]string, mutex *
 func RenderTemplate(w http.ResponseWriter, templatePath string, data interface{}) {
 	tmpl, err := template.New("MyTemplate").ParseFiles("templates/framework.html", templatePath)
 	if err != nil {
-		fmt.Printf("parsing template files failed: %s\n", err)
+		log.Criticalf("parsing template files failed: %s\n", err)
 	}
 	tmpl.ExecuteTemplate(w, "frameworkTemplate", data)
 	if err != nil {
-		fmt.Printf("executing template failed: %s\n", err)
+		log.Criticalf("executing template failed: %s\n", err)
 		return
 	}
 }
