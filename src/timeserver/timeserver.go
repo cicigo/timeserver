@@ -5,7 +5,7 @@
 //number.
 //
 //Copyright 2015 Cici, Chunchao Zhang
-package timeserver
+package main
 
 import (
 	"flag"
@@ -25,8 +25,9 @@ var mutex = &sync.Mutex{}
 const COOKIE_NAME string = "UUID"
 
 type TimeContent struct {
-	Time string
-	Name string
+	Time    string
+	UtcTime string
+	Name    string
 }
 
 // set up webpage format and display the current time
@@ -35,11 +36,15 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 
 	const layout = "3:04:05PM"
 	t := time.Now()
+	const utcLayout = "15:04:05 UTC"
+	utc := t.UTC()
+
 	name, _ := utils.GetNameFromCookie(r, loggedInNames, mutex)
 
 	timeContent := TimeContent{
-		Time: t.Format(layout),
-		Name: name,
+		Time:    t.Format(layout),
+		UtcTime: utc.Format(utcLayout),
+		Name:    name,
 	}
 
 	utils.RenderTemplate(w, "templates/time.html", timeContent)

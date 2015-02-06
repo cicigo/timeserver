@@ -2,5 +2,5 @@
 {{end}}
 
 {{define "contentTemplate"}}
- <p class="time">The time is now <span class="time">{{.Time}}</span>{{with .Name}}, {{.}}{{end}}.</p>
+ <p class="time">The time is now <span class="time">{{.Time}}</span> ({{.UtcTime}}){{with .Name}}, {{.}}{{end}}.</p>
 {{end}}
