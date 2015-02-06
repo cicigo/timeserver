@@ -9,15 +9,17 @@
       &nbsp;
     </div>
     <hr class="logo" />
-    <div class="menu"><p>
-        Home | Time | Logout | About Us
-    </p></div>
-
+    {{template "menu"}}
     {{template "contentTemplate" .}}
+    {{template "menu"}}
 
-    <div class="menu"><p>
-        Home | Time | Logout | About Us
-    </p></div>
   </body>
 </html>
+{{end}}
+
+{{define "menu"}}
+<div class="menu"><p>
+    <a href="/">Home</a> | <a href="/time">Time</a> | <a href="/logout">Logout</a> | <a href="https://github.com/cicigo/uwb-css490">About Us</a>
+</p></div>
+
 {{end}}
