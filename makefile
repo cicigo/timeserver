@@ -2,6 +2,7 @@ PACKAGES=utils timeserver github.com/cihub/seelog
 
 GOPATH=$(CURDIR)
 GODOC_PORT=:6060
+FLAGS=
 
 all: fmt install
 
@@ -18,7 +19,5 @@ clean:
 	rm -rf bin pkg out
 
 run: install
-	bin/timeserver
+	bin/timeserver $(FLAGS)
 
-version: install
-	bin/timeserver -v
