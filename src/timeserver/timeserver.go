@@ -79,7 +79,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {
 		log.Println("log in name is empty")
-		fmt.Fprintf(w, "C'mon, I need a name")
+		utils.RenderTemplate(w, "templates/emptyName.html", nil)
 	} else {
 		log.Println("log in name is", name)
 
