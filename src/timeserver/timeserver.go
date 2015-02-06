@@ -72,40 +72,32 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 	const layout = "3:04:05PM"
 	t := time.Now()
 	name, _ := getNameFromCookie(r)
-	
+
 	timeContent := TimeContent{
 		Time: t.Format(layout),
 		Name: name,
 	}
 
-	tmpl, err := template.New("time").ParseFiles("templates/time.html")
-	if err != nil {
-		fmt.Printf("parsing template failed: %s\n", err)
-		return
-	}
+	renderTemplate(w, "templates/time.html", timeContent)
+}
 
-	//		var time string = t.Format(layout)
-	err = tmpl.ExecuteTemplate(w, "timeTemplate", timeContent)
+func renderTemplate(w http.ResponseWriter, templatePath string, data interface{}) {
+	tmpl, err := template.New("MyTemplate").ParseFiles("templates/framework.html", templatePath)
+	if err != nil {
+		fmt.Printf("parsing template files failed: %s\n", err)
+	}
+	tmpl.ExecuteTemplate(w, "frameworkTemplate", data)
 	if err != nil {
 		fmt.Printf("executing template failed: %s\n", err)
 		return
 	}
-
 }
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling NotFound URL: %s\n", r.URL.Path)
 	w.WriteHeader(404)
-	content :=
-		`
-<html>
-<body>
-<p>These are not the URLs you're looking for.</p>
-</body>
-</html>
-`
-	fmt.Fprintf(w, content)
+	renderTemplate(w, "templates/notfound.html", nil)
 }
 
 // uuid page handler, for testing.
@@ -122,23 +114,11 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Handling homepage request.")
-	loginForm := `
-<html>
-<body>
-<form action="login">
-  What is your name, Earthling?
-  <input type="text" name="name" size="50">
-  <input type="submit">
-</form>
-</p>
-</body>
-</html>
-`
-	greetings := `Greetings, %s`
+
 	if name, ok := getNameFromCookie(r); ok {
-		fmt.Fprintf(w, fmt.Sprintf(greetings, name))
+		renderTemplate(w, "templates/greeting.html", name)
 	} else {
-		fmt.Fprintf(w, loginForm)
+		renderTemplate(w, "templates/login.html", nil)
 	}
 }
 
@@ -183,16 +163,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 
 	// display goodbye message
-	goodByeContent := `
-<html>
-<head>
-<META http-equiv="refresh" content="10;URL=/">
-<body>
-<p>Good-bye.</p>
-</body>
-</html>
-`
-	fmt.Fprintf(w, goodByeContent)
+	renderTemplate(w, "templates/logout.html", nil)
 }
 
 func main() {
@@ -205,8 +176,17 @@ func main() {
 		return
 	}
 
+	// logger, err := log.LoggerFromConfigAsFile("etc/log.xml")
+
+	// if err != nil {
+	// 	fmt.Printf("configure log file: %s\n", err)
+	// 	return
+	// }
+
+	// log.ReplaceLogger(logger)
+
 	// handle css
-	http.Handle("/css", http.FileServer(http.Dir("css")))
+	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 
 	http.HandleFunc("/time", handleTime)
 	http.HandleFunc("/", handleHomePage)

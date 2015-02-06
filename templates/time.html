@@ -1,22 +1,6 @@
-{{define "timeTemplate"}}
-<html>
-  <head>
-    <link rel="stylesheet" type="text/css" href="../css/css490.css" />
-  </head>
-  <body>
-    <div class="logo">
-      &nbsp;
-    </div>
-    <hr class="logo" />
-    <div class="menu"><p>
-        Home | Time | Logout | About Us
-    </p></div>
+{{define "headTemplate"}}
+{{end}}
 
-    <p class="time">The time is now <span class="time">{{.Time}}</span>{{with .Name}}, {{.}}{{end}}.</p>
-
-    <div class="menu"><p>
-        Home | Time | Logout | About Us
-    </p></div>
-  </body>
-</html>
+{{define "contentTemplate"}}
+ <p class="time">The time is now <span class="time">{{.Time}}</span>{{with .Name}}, {{.}}{{end}}.</p>
 {{end}}
