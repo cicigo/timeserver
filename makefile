@@ -1,4 +1,4 @@
-PACKAGES=timeserver
+PACKAGES=utils timeserver
 
 GOPATH=$(CURDIR)
 GODOC_PORT=:6060

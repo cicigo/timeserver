@@ -5,60 +5,24 @@
 //number.
 //
 //Copyright 2015 Cici, Chunchao Zhang
-package main
+package timeserver
 
 import (
 	"flag"
 	"fmt"
 	"html"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
-	"strings"
 	"sync"
 	"time"
+	"utils"
 )
 
 var loggedInNames = make(map[string]string)
 var mutex = &sync.Mutex{}
 
 const COOKIE_NAME string = "UUID"
-
-// generate an universally unique identifier
-func uuid() string {
-	out, error := exec.Command("/usr/bin/uuidgen").Output()
-	if error != nil {
-		log.Fatal(error)
-	}
-	return strings.Trim(string(out[:]), "\n ")
-}
-
-// get UUID from request cookie
-func getUUIDFromCookie(r *http.Request) (string, bool) {
-	cookie, error := r.Cookie(COOKIE_NAME)
-
-	if error != nil {
-		log.Println("No cookie found")
-		return "", false
-	} else {
-		return cookie.Value, true
-	}
-}
-
-// get login name from cookie
-func getNameFromCookie(r *http.Request) (string, bool) {
-	if uuid, ok := getUUIDFromCookie(r); ok {
-		mutex.Lock()
-		defer mutex.Unlock()
-		name, nameOk := loggedInNames[uuid]
-		return name, nameOk
-	} else {
-		return "", false
-	}
-
-}
 
 type TimeContent struct {
 	Time string
@@ -71,39 +35,21 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 
 	const layout = "3:04:05PM"
 	t := time.Now()
-	name, _ := getNameFromCookie(r)
+	name, _ := utils.GetNameFromCookie(r, loggedInNames, mutex)
 
 	timeContent := TimeContent{
 		Time: t.Format(layout),
 		Name: name,
 	}
 
-	renderTemplate(w, "templates/time.html", timeContent)
-}
-
-func renderTemplate(w http.ResponseWriter, templatePath string, data interface{}) {
-	tmpl, err := template.New("MyTemplate").ParseFiles("templates/framework.html", templatePath)
-	if err != nil {
-		fmt.Printf("parsing template files failed: %s\n", err)
-	}
-	tmpl.ExecuteTemplate(w, "frameworkTemplate", data)
-	if err != nil {
-		fmt.Printf("executing template failed: %s\n", err)
-		return
-	}
+	utils.RenderTemplate(w, "templates/time.html", timeContent)
 }
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling NotFound URL: %s\n", r.URL.Path)
 	w.WriteHeader(404)
-	renderTemplate(w, "templates/notfound.html", nil)
-}
-
-// uuid page handler, for testing.
-func handleUUID(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling UUID request.")
-	fmt.Fprintf(w, uuid())
+	utils.RenderTemplate(w, "templates/notfound.html", nil)
 }
 
 // homepage handler
@@ -115,10 +61,10 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Handling homepage request.")
 
-	if name, ok := getNameFromCookie(r); ok {
-		renderTemplate(w, "templates/greeting.html", name)
+	if name, ok := utils.GetNameFromCookie(r, loggedInNames, mutex); ok {
+		utils.RenderTemplate(w, "templates/greeting.html", name)
 	} else {
-		renderTemplate(w, "templates/login.html", nil)
+		utils.RenderTemplate(w, "templates/login.html", nil)
 	}
 }
 
@@ -132,7 +78,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Println("log in name is", name)
 
-		uuid := uuid()
+		uuid := utils.Uuid()
 		mutex.Lock()
 		loggedInNames[uuid] = name
 		mutex.Unlock()
@@ -152,7 +98,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling logout request.")
 
 	// if uuid found in cookie, delete it from loggedInNames
-	if uuid, ok := getUUIDFromCookie(r); ok {
+	if uuid, ok := utils.GetUUIDFromCookie(r); ok {
 		mutex.Lock()
 		delete(loggedInNames, uuid)
 		mutex.Unlock()
@@ -163,7 +109,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 
 	// display goodbye message
-	renderTemplate(w, "templates/logout.html", nil)
+	utils.RenderTemplate(w, "templates/logout.html", nil)
 }
 
 func main() {
@@ -191,7 +137,6 @@ func main() {
 	http.HandleFunc("/time", handleTime)
 	http.HandleFunc("/", handleHomePage)
 	http.HandleFunc("/index.html", handleHomePage)
-	http.HandleFunc("/uuid", handleUUID)
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/logout", handleLogout)
 
