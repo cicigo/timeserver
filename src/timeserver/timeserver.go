@@ -21,6 +21,7 @@ import (
 
 var loggedInNames = make(map[string]string)
 var mutex = &sync.Mutex{}
+var templatesFolder string
 
 const COOKIE_NAME string = "UUID"
 
@@ -47,14 +48,14 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 		Name:    name,
 	}
 
-	utils.RenderTemplate(w, "templates/time.html", timeContent)
+	utils.RenderTemplate(w, templatesFolder, "time.html", timeContent)
 }
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Handling NotFound URL: %s\n", r.URL.Path)
 	w.WriteHeader(404)
-	utils.RenderTemplate(w, "templates/notfound.html", nil)
+	utils.RenderTemplate(w, templatesFolder, "notfound.html", nil)
 }
 
 // homepage handler
@@ -67,9 +68,9 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Handling homepage request.")
 
 	if name, ok := utils.GetNameFromCookie(r, loggedInNames, mutex); ok {
-		utils.RenderTemplate(w, "templates/greeting.html", name)
+		utils.RenderTemplate(w, templatesFolder, "greeting.html", name)
 	} else {
-		utils.RenderTemplate(w, "templates/login.html", nil)
+		utils.RenderTemplate(w, templatesFolder, "login.html", nil)
 	}
 }
 
@@ -79,7 +80,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {
 		log.Info("log in name is empty")
-		utils.RenderTemplate(w, "templates/emptyName.html", nil)
+		utils.RenderTemplate(w, templatesFolder, "emptyname.html", nil)
 	} else {
 		log.Infof("log in name is %s.", name)
 
@@ -114,12 +115,13 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 
 	// display goodbye message
-	utils.RenderTemplate(w, "templates/logout.html", nil)
+	utils.RenderTemplate(w, templatesFolder, "logout.html", nil)
 }
 
 func main() {
 	portPtr := flag.Int("port", 8080, "http server port number")
 	versionPtr := flag.Bool("v", false, "Display version number")
+	templatesPtr := flag.String("templates", "templates", "Templates folder")
 	flag.Parse()
 
 	if *versionPtr {
@@ -135,6 +137,9 @@ func main() {
 	}
 
 	log.ReplaceLogger(logger)
+
+	templatesFolder = *templatesPtr
+	log.Infof("Templates folder is %s.", templatesFolder)
 
 	// handle css
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))

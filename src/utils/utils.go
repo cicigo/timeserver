@@ -1,10 +1,11 @@
 package utils
 
 import (
-	"html/template"
 	log "github.com/cihub/seelog"
+	"html/template"
 	"net/http"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -45,8 +46,11 @@ func GetNameFromCookie(r *http.Request, loggedInNames map[string]string, mutex *
 
 }
 
-func RenderTemplate(w http.ResponseWriter, templatePath string, data interface{}) {
-	tmpl, err := template.New("MyTemplate").ParseFiles("templates/framework.html", templatePath)
+func RenderTemplate(w http.ResponseWriter, templatesFolder string, templateName string, data interface{}) {
+	tmpl, err := template.New("MyTemplate").ParseFiles(
+		filepath.Join(templatesFolder, "framework.html"),
+		filepath.Join(templatesFolder, templateName))
+
 	if err != nil {
 		log.Criticalf("parsing template files failed: %s\n", err)
 	}
