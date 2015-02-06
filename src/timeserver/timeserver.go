@@ -122,6 +122,8 @@ func main() {
 	portPtr := flag.Int("port", 8080, "http server port number")
 	versionPtr := flag.Bool("v", false, "Display version number")
 	templatesPtr := flag.String("templates", "templates", "Templates folder")
+	logPtr := flag.String("log", "etc/log.xml", "Log configuration file path")
+
 	flag.Parse()
 
 	if *versionPtr {
@@ -129,7 +131,7 @@ func main() {
 		return
 	}
 
-	logger, err := log.LoggerFromConfigAsFile("etc/log.xml")
+	logger, err := log.LoggerFromConfigAsFile(*logPtr)
 
 	if err != nil {
 		fmt.Printf("configure log file: %s\n", err)

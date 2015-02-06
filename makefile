@@ -15,7 +15,7 @@ doc:
 	GOPATH=$(GOPATH) godoc -v --http=$(GODOC_PORT) --index=true
 
 clean:
-	rm -rf bin pkg
+	rm -rf bin pkg out
 
 run: install
 	bin/timeserver
