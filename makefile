@@ -1,4 +1,4 @@
-PACKAGES=utils timeserver
+PACKAGES=utils timeserver github.com/cihub/seelog
 
 GOPATH=$(CURDIR)
 GODOC_PORT=:6060
