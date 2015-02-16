@@ -1,4 +1,4 @@
-//timeserver serves a web page displaying the current time
+/timeserver serves a web page displaying the current time
 //of day. The default port number for the webserver is 8080.
 //Timeserver only displays time for the time request.
 //Using command-line argument -v can show the version
@@ -22,6 +22,7 @@ import (
 var loggedInNames = make(map[string]string)
 var mutex = &sync.Mutex{}
 var templatesFolder string
+var authClient = utils.NewAuthClient("http://localhost:7070")
 
 const COOKIE_NAME string = "UUID"
 
@@ -85,9 +86,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		log.Infof("log in name is %s.", name)
 
 		uuid := utils.Uuid()
-		mutex.Lock()
-		loggedInNames[uuid] = name
-		mutex.Unlock()
+		
+		if err := authClient.Set(uuid, name); err {
+			log.Errorf("log in failed.: %s", err)
+			return
+		}
+		
 		// Set cookie
 
 		cookie := http.Cookie{Name: COOKIE_NAME, Value: uuid}
@@ -95,7 +99,6 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 		// redirect to homepage
 		http.Redirect(w, r, "/", 302)
-		//fmt.Fprintf(w, fmt.Sprintf("Greeting, %s", name))
 	}
 }
 

@@ -1,4 +1,4 @@
-PACKAGES=utils timeserver github.com/cihub/seelog
+PACKAGES=utils command/authserver github.com/cihub/seelog
 
 GOPATH=$(CURDIR)
 GODOC_PORT=:6060
@@ -18,6 +18,8 @@ doc:
 clean:
 	rm -rf bin pkg out
 
-run: install
+timeserver: install
 	bin/timeserver $(FLAGS)
 
+authserver: install
+	bin/authserver $(FLAGS)
