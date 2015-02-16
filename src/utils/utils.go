@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
 const COOKIE_NAME string = "UUID"
@@ -22,28 +21,30 @@ func Uuid() string {
 }
 
 // get UUID from request cookie
-func GetUUIDFromCookie(r *http.Request) (string, bool) {
+func GetUUIDFromCookie(r *http.Request) (string, error) {
 	cookie, error := r.Cookie(COOKIE_NAME)
 
 	if error != nil {
 		log.Info("No cookie found")
-		return "", false
+		return "", error
 	} else {
-		return cookie.Value, true
+		return cookie.Value, nil
 	}
 }
 
 // get login name from cookie
-func GetNameFromCookie(r *http.Request, loggedInNames map[string]string, mutex *sync.Mutex) (string, bool) {
-	if uuid, ok := GetUUIDFromCookie(r); ok {
-		mutex.Lock()
-		defer mutex.Unlock()
-		name, nameOk := loggedInNames[uuid]
-		return name, nameOk
-	} else {
-		return "", false
+func GetNameFromCookie(r *http.Request, authClient *AuthClient) string {
+	uuid, error := GetUUIDFromCookie(r)
+	if error != nil {
+		return ""
 	}
 
+	name, error := authClient.Get(uuid)
+	if error != nil {
+		return ""
+	}
+
+	return name
 }
 
 func RenderTemplate(w http.ResponseWriter, templatesFolder string, templateName string, data interface{}) {

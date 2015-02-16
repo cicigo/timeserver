@@ -21,6 +21,12 @@ func (m *ConcurrentMap) Put(key string, value string) {
 	m.mutex.Unlock()
 }
 
+func (m *ConcurrentMap) Delete(key string) {
+	m.mutex.Lock()
+	delete(m.data, key)
+	m.mutex.Unlock()
+}
+
 func NewConcurrentMap() *ConcurrentMap {
 	return &ConcurrentMap{
 		data:  make(map[string]string),

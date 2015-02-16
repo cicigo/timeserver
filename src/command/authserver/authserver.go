@@ -22,11 +22,13 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 		uuids := r.Form["cookie"]
 		if checkRequestParameter(uuids) {
 			name := concurrent_map.Get(uuids[0])
+			log.Infof("Get name of uuid %s: %s", uuids[0], name)
 
 			fmt.Fprint(w, name)
 			w.WriteHeader(200)
 
 		} else {
+			log.Warnf("UUID is emtpy")
 			w.WriteHeader(400)
 
 		}
@@ -37,9 +39,17 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 		uuids := r.Form["cookie"]
 		names := r.Form["name"]
 
-		if uuids == nil || len(uuids) == 0 || names == nil || len(names) == 0 {
+		if uuids == nil || len(uuids) == 0 {
+			log.Warnf("UUID is empty.")
 			w.WriteHeader(400)
+		} else if names == nil || len(names) == 0 {
+			log.Infof("Delete uuid %s.", uuids[0])
+			concurrent_map.Delete(uuids[0])
+			w.WriteHeader(200)
+
 		} else {
+			log.Infof("Put name of uuid %s: %s", uuids[0], names[0])
+
 			concurrent_map.Put(uuids[0], names[0])
 			w.WriteHeader(200)
 		}

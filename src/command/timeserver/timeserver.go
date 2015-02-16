@@ -1,4 +1,4 @@
-/timeserver serves a web page displaying the current time
+//timeserver serves a web page displaying the current time
 //of day. The default port number for the webserver is 8080.
 //Timeserver only displays time for the time request.
 //Using command-line argument -v can show the version
@@ -14,13 +14,10 @@ import (
 	"html"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 	"utils"
 )
 
-var loggedInNames = make(map[string]string)
-var mutex = &sync.Mutex{}
 var templatesFolder string
 var authClient = utils.NewAuthClient("http://localhost:7070")
 
@@ -41,8 +38,8 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 	const utcLayout = "15:04:05 UTC"
 	utc := t.UTC()
 
-	name, _ := utils.GetNameFromCookie(r, loggedInNames, mutex)
-
+	name := utils.GetNameFromCookie(r, authClient)
+	
 	timeContent := TimeContent{
 		Time:    t.Format(layout),
 		UtcTime: utc.Format(utcLayout),
@@ -68,10 +65,12 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("Handling homepage request.")
 
-	if name, ok := utils.GetNameFromCookie(r, loggedInNames, mutex); ok {
-		utils.RenderTemplate(w, templatesFolder, "greeting.html", name)
-	} else {
+	name := utils.GetNameFromCookie(r, authClient)
+
+	if name == "" {
 		utils.RenderTemplate(w, templatesFolder, "login.html", nil)
+	} else {
+		utils.RenderTemplate(w, templatesFolder, "greeting.html", name)
 	}
 }
 
@@ -86,12 +85,13 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		log.Infof("log in name is %s.", name)
 
 		uuid := utils.Uuid()
-		
-		if err := authClient.Set(uuid, name); err {
+
+		if err := authClient.Set(uuid, name); err != nil {
 			log.Errorf("log in failed.: %s", err)
+			w.WriteHeader(500)
 			return
 		}
-		
+
 		// Set cookie
 
 		cookie := http.Cookie{Name: COOKIE_NAME, Value: uuid}
@@ -107,10 +107,10 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	log.Info("Handling logout request.")
 
 	// if uuid found in cookie, delete it from loggedInNames
-	if uuid, ok := utils.GetUUIDFromCookie(r); ok {
-		mutex.Lock()
-		delete(loggedInNames, uuid)
-		mutex.Unlock()
+	uuid, error := utils.GetUUIDFromCookie(r)
+
+	if error == nil && uuid != "" {
+		authClient.Delete(uuid)
 	}
 
 	// clear cookie

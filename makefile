@@ -1,4 +1,4 @@
-PACKAGES=utils command/authserver github.com/cihub/seelog
+PACKAGES=utils command/authserver command/timeserver github.com/cihub/seelog
 
 GOPATH=$(CURDIR)
 GODOC_PORT=:6060
