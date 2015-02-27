@@ -8,18 +8,18 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	log "github.com/cihub/seelog"
 	"html"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
 	"utils"
 )
 
-var templatesFolder string
-var authClient = utils.NewAuthClient("http://localhost:7070")
+var config = utils.GetConfig()
+var authClient = utils.NewAuthClient(fmt.Sprintf("%s:%v", config.AuthHost, config.AuthPort))
 
 const COOKIE_NAME string = "UUID"
 
@@ -29,31 +29,38 @@ type TimeContent struct {
 	Name    string
 }
 
+// load simulator
+func load() {
+	load := time.Duration((rand.NormFloat64()*config.DeviationMs + config.AvgResponseMs)) * time.Millisecond
+	time.Sleep(load)
+}
+
 // set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
 	log.Info("Handling time request.")
 
+	load()
 	const layout = "3:04:05PM"
 	t := time.Now()
 	const utcLayout = "15:04:05 UTC"
 	utc := t.UTC()
 
 	name := utils.GetNameFromCookie(r, authClient)
-	
+
 	timeContent := TimeContent{
 		Time:    t.Format(layout),
 		UtcTime: utc.Format(utcLayout),
 		Name:    name,
 	}
 
-	utils.RenderTemplate(w, templatesFolder, "time.html", timeContent)
+	utils.RenderTemplate(w, config.Templates, "time.html", timeContent)
 }
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Handling NotFound URL: %s\n", r.URL.Path)
 	w.WriteHeader(404)
-	utils.RenderTemplate(w, templatesFolder, "notfound.html", nil)
+	utils.RenderTemplate(w, config.Templates, "notfound.html", nil)
 }
 
 // homepage handler
@@ -68,9 +75,9 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 	name := utils.GetNameFromCookie(r, authClient)
 
 	if name == "" {
-		utils.RenderTemplate(w, templatesFolder, "login.html", nil)
+		utils.RenderTemplate(w, config.Templates, "login.html", nil)
 	} else {
-		utils.RenderTemplate(w, templatesFolder, "greeting.html", name)
+		utils.RenderTemplate(w, config.Templates, "greeting.html", name)
 	}
 }
 
@@ -80,7 +87,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {
 		log.Info("log in name is empty")
-		utils.RenderTemplate(w, templatesFolder, "emptyname.html", nil)
+		utils.RenderTemplate(w, config.Templates, "emptyname.html", nil)
 	} else {
 		log.Infof("log in name is %s.", name)
 
@@ -118,23 +125,16 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 
 	// display goodbye message
-	utils.RenderTemplate(w, templatesFolder, "logout.html", nil)
+	utils.RenderTemplate(w, config.Templates, "logout.html", nil)
 }
 
 func main() {
-	portPtr := flag.Int("port", 8080, "http server port number")
-	versionPtr := flag.Bool("v", false, "Display version number")
-	templatesPtr := flag.String("templates", "templates", "Templates folder")
-	logPtr := flag.String("log", "etc/log.xml", "Log configuration file path")
-
-	flag.Parse()
-
-	if *versionPtr {
+	if config.Version {
 		fmt.Println("2.0.0")
 		return
 	}
 
-	logger, err := log.LoggerFromConfigAsFile(*logPtr)
+	logger, err := log.LoggerFromConfigAsFile(config.Log)
 
 	if err != nil {
 		fmt.Printf("configure log file: %s\n", err)
@@ -143,8 +143,7 @@ func main() {
 
 	log.ReplaceLogger(logger)
 
-	templatesFolder = *templatesPtr
-	log.Infof("Templates folder is %s.", templatesFolder)
+	log.Infof("Templates folder is %s.", config.Templates)
 
 	// handle css
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
@@ -155,9 +154,9 @@ func main() {
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/logout", handleLogout)
 
-	error := http.ListenAndServe(fmt.Sprintf(":%v", *portPtr), nil)
+	error := http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
 	if error != nil {
-		log.Criticalf("Start server with port %d failed: %v\n", *portPtr, error)
+		log.Criticalf("Start server with port %d failed: %v\n", config.Port, error)
 		os.Exit(1)
 	}
 }
