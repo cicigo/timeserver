@@ -18,7 +18,7 @@ type Config struct {
 	AuthTimeoutMs      float64
 	AvgResponseMs      float64
 	DeviationMs        float64
-	CheckpointInterval float64
+	CheckpointInterval int
 	MaxInflight        uint
 	Templates          string
 	Log                string
@@ -33,7 +33,7 @@ func init() {
 	flag.Float64Var(&config.AuthTimeoutMs, "authtimeout-ms", 1000.0, "Auth response timeout in milliseconds")
 	flag.Float64Var(&config.AvgResponseMs, "avg-response-ms", 0.0, "Avg response in milliseconds")
 	flag.Float64Var(&config.DeviationMs, "deviation-ms", 0.0, "Response deviation in milliseconds")
-	flag.Float64Var(&config.CheckpointInterval, "checkpoint-interval", 10, "Checkpoint save interval in seconds")
+	flag.IntVar(&config.CheckpointInterval, "checkpoint-interval", 60, "Checkpoint save interval in seconds")
 	flag.UintVar(&config.MaxInflight, "max-inflight", 100, "Maximum number of in-flight time requests the server can handle")
 	flag.StringVar(&config.Templates, "templates", "templates", "Templates folder")
 	flag.StringVar(&config.Log, "log", "etc/log.xml", "Log configuration file path")
