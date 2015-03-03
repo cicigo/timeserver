@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"sync"
 	log "github.com/cihub/seelog"
+	"sync"
 )
 
 type Limiter struct {

@@ -60,7 +60,7 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 		cookie := http.Cookie{Name: COOKIE_NAME, MaxAge: -1}
 		http.SetCookie(w, &cookie)
 	}
-	
+
 	timeContent := TimeContent{
 		Time:    t.Format(layout),
 		UtcTime: utc.Format(utcLayout),
@@ -99,7 +99,7 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 		cookie := http.Cookie{Name: COOKIE_NAME, MaxAge: -1}
 		http.SetCookie(w, &cookie)
 	}
-	
+
 	if name == "" {
 		utils.RenderTemplate(w, config.Templates, "login.html", nil)
 	} else {

@@ -36,7 +36,7 @@ func (c *AuthClient) Set(uuid string, name string) error {
 	url := fmt.Sprintf("%s/set?cookie=%s&name=%s", c.serverEndpoint, uuid, name)
 	log.Infof("Set cookie request: %s", url)
 	r, err := c.client.PostForm(url, nil)
-	
+
 	if err != nil {
 		log.Errorf("Set request failed: %s", err)
 		return err
