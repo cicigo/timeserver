@@ -1,19 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	log "github.com/cihub/seelog"
+	"io/ioutil"
 	"net/http"
 	"os"
-	"io/ioutil"
-	"encoding/json"
-	"utils"
 	"time"
+	"utils"
 )
 
 var concurrent_map = utils.NewConcurrentMap()
 var config = utils.GetConfig()
-
 
 func checkRequestParameter(p []string) bool {
 	return p != nil && len(p) > 0 && p[0] != ""
@@ -74,11 +73,11 @@ func dumpContinuously(ticker *time.Ticker, quit chan bool, dumpFile string) {
 				log.Errorf("Failed to dump auth info: %s", error)
 			}
 			dump(b, dumpFile)
-		case <- quit:
+		case <-quit:
 			ticker.Stop()
 			return
 		}
-		
+
 	}
 }
 
@@ -101,7 +100,7 @@ func dump(data []byte, dumpFile string) {
 	} else if os.IsNotExist(error) {
 		if error = ioutil.WriteFile(dumpFile, data, 0644); error != nil {
 			log.Errorf("Write file failed: %s\n", error)
-			
+
 		}
 	} else {
 		log.Errorf("Get file stat failed: %s\n", error)
@@ -115,7 +114,7 @@ func load(dumpFile string) {
 			log.Errorf("Reading auth info file failed, %s.\n", err)
 			return
 		}
-		
+
 		data := make(map[string]string)
 		if jsonBlob != nil {
 			error = json.Unmarshal(jsonBlob, &data)
@@ -138,7 +137,7 @@ func main() {
 	}
 
 	log.ReplaceLogger(logger)
-	
+
 	if config.DumpFile != "" {
 		load(config.DumpFile)
 	}
@@ -147,7 +146,7 @@ func main() {
 		log.Infof("Dump auth info every %v seconds.", config.CheckpointInterval)
 		ticker := time.NewTicker(time.Duration(config.CheckpointInterval) * time.Second)
 		quit := make(chan bool)
-		defer func() {quit <- true}()
+		defer func() { quit <- true }()
 		go dumpContinuously(ticker, quit, config.DumpFile)
 	}
 
@@ -158,5 +157,5 @@ func main() {
 		log.Criticalf("Start auth server with port %d failed: %v\n", config.AuthPort, error)
 		os.Exit(1)
 	}
-	
+
 }

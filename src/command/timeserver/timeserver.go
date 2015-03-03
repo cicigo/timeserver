@@ -20,6 +20,7 @@ import (
 
 var config = utils.GetConfig()
 var authClient = utils.NewAuthClient(fmt.Sprintf("%s:%v", config.AuthHost, config.AuthPort))
+var limiter = utils.NewLimiter(config.MaxInflight)
 
 const COOKIE_NAME string = "UUID"
 
@@ -37,6 +38,13 @@ func load() {
 
 // set up webpage format and display the current time
 func handleTime(w http.ResponseWriter, r *http.Request) {
+	if !limiter.Get() {
+		log.Warn("Cannot get token")
+		w.WriteHeader(500)
+		return
+	}
+	defer limiter.Release()
+
 	log.Info("Handling time request.")
 
 	load()
@@ -70,6 +78,12 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !limiter.Get() {
+		w.WriteHeader(500)
+		return
+	}
+	defer limiter.Release()
+
 	log.Infof("Handling homepage request.")
 
 	name := utils.GetNameFromCookie(r, authClient)
@@ -83,6 +97,12 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 
 // login page handler
 func handleLogin(w http.ResponseWriter, r *http.Request) {
+	if !limiter.Get() {
+		w.WriteHeader(500)
+		return
+	}
+	defer limiter.Release()
+
 	log.Infof("Handling login request.")
 	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {

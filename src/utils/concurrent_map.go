@@ -30,7 +30,7 @@ func (m *ConcurrentMap) Delete(key string) {
 func (m *ConcurrentMap) GetData() map[string]string {
 	data := make(map[string]string)
 	m.mutex.Lock()
-	for k,v := range m.data {
+	for k, v := range m.data {
 		data[k] = v
 	}
 	m.mutex.Unlock()
