@@ -33,18 +33,18 @@ func GetUUIDFromCookie(r *http.Request) (string, error) {
 }
 
 // get login name from cookie
-func GetNameFromCookie(r *http.Request, authClient *AuthClient) string {
+func GetNameFromCookie(r *http.Request, authClient *AuthClient) (string, error) {
 	uuid, error := GetUUIDFromCookie(r)
 	if error != nil {
-		return ""
+		return "", error
 	}
 
 	name, error := authClient.Get(uuid)
 	if error != nil {
-		return ""
+		return "", error
 	}
 
-	return name
+	return name, nil
 }
 
 func RenderTemplate(w http.ResponseWriter, templatesFolder string, templateName string, data interface{}) {
