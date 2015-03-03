@@ -1,4 +1,4 @@
-PACKAGES=utils command/authserver command/timeserver github.com/cihub/seelog 
+PACKAGES=utils utils/serverconfig command/authserver command/timeserver command/loadgen github.com/cihub/seelog 
 
 GOPATH=$(CURDIR)
 GODOC_PORT=:6060
@@ -23,6 +23,9 @@ timeserver: install
 
 authserver: install
 	bin/authserver $(FLAGS)
+
+loadgen: install
+	bin/loadgen $(FLAGS)
 
 test: install
 	GOPATH=$(GOPATH) go test $(PACKAGES)

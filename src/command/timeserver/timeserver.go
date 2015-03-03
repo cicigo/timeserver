@@ -16,9 +16,10 @@ import (
 	"os"
 	"time"
 	"utils"
+	"utils/serverconfig"
 )
 
-var config = utils.GetConfig()
+var config = serverconfig.GetConfig()
 var authClient = utils.NewAuthClient(fmt.Sprintf("%s:%v", config.AuthHost, config.AuthPort))
 var limiter = utils.NewLimiter(config.MaxInflight)
 

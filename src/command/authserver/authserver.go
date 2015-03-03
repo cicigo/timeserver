@@ -9,10 +9,11 @@ import (
 	"os"
 	"time"
 	"utils"
+	"utils/serverconfig"
 )
 
 var concurrent_map = utils.NewConcurrentMap()
-var config = utils.GetConfig()
+var config = serverconfig.GetConfig()
 
 func checkRequestParameter(p []string) bool {
 	return p != nil && len(p) > 0 && p[0] != ""

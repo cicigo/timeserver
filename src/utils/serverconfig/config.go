@@ -1,4 +1,4 @@
-package utils
+package serverconfig
 
 import (
 	"flag"
@@ -32,7 +32,7 @@ func init() {
 	flag.StringVar(&config.AuthHost, "authhost", "", "Auth server host")
 	flag.Float64Var(&config.AuthTimeoutMs, "authtimeout-ms", 1000.0, "Auth response timeout in milliseconds")
 	flag.Float64Var(&config.AvgResponseMs, "avg-response-ms", 0.0, "Avg response in milliseconds")
-	flag.Float64Var(&config.DeviationMs, "deviation-ms", 0.0, "Response deviation in milliseconds")
+	flag.Float64Var(&config.DeviationMs, "response-deviation-ms", 0.0, "Response deviation in milliseconds")
 	flag.IntVar(&config.CheckpointInterval, "checkpoint-interval", 60, "Checkpoint save interval in seconds")
 	flag.IntVar(&config.MaxInflight, "max-inflight", 0, "Maximum number of in-flight time requests the server can handle")
 	flag.StringVar(&config.Templates, "templates", "templates", "Templates folder")

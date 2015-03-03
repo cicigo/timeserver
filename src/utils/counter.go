@@ -41,7 +41,7 @@ func (c *Counter) Incr(delta int) {
 	c.value += delta
 }
 
-func Dump() map[string]int {
+func DumpCounter() map[string]int {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	dump := make(map[string]int)

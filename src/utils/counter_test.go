@@ -50,7 +50,7 @@ func TestCounter(t *testing.T) {
 		"ares":   4,
 		"athena": 8,
 	}
-	actual := Dump()
+	actual := DumpCounter()
 	for k, v := range expected {
 		if v != actual[k] {
 			t.Errorf("counter %s: expected %d, got %d", k, v, actual[k])
