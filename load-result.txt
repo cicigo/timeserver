@@ -1,0 +1,37 @@
+make authserver FLAGS="--log=etc/auth-log.xml"
+make timeserver FLAGS="--log=etc/log.xml --port=8080 --max-inflight=80 --avg-response-ms=500   --response-deviation-ms=300 --authhost=http://localhost"
+make loadgen FLAGS="--url=http://localhost:8080/time --runtime=10 --rate=200 --burst=20 --timeout-ms=1000"
+
+200s: 1324
+300s: 0
+400s: 0
+500s: 526
+Errors: 0
+Total: 1918
+100s: 0
+
+
+make authserver FLAGS="--log=etc/auth-log.xml"
+make timeserver FLAGS="--log=etc/log.xml --port=8080 --max-inflight=160 --avg-response-ms=500   --response-deviation-ms=300 --authhost=http://localhost"
+make loadgen FLAGS="--url=http://localhost:8080/time --runtime=10 --rate=200 --burst=20 --timeout-ms=1000"
+
+300s: 0
+400s: 0
+500s: 0
+Errors: 0
+Total: 1884
+100s: 0
+200s: 1792
+
+
+make authserver FLAGS="--log=etc/auth-log.xml"
+make timeserver FLAGS="--log=etc/log.xml --port=8080 --max-inflight=160 --avg-response-ms=500   --response-deviation-ms=300 --authhost=http://localhost"
+make loadgen FLAGS="--url=http://localhost:8080/time --runtime=20 --rate=2000 --burst=200 --timeout-ms=1000"
+
+Errors: 2005
+Total: 18624
+100s: 0
+200s: 2809
+300s: 0
+400s: 0
+500s: 13253
