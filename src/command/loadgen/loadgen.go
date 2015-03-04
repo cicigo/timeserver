@@ -9,10 +9,10 @@ import (
 )
 
 type LoadGenConfig struct {
-	rate      int64
-	burst     int64
-	timeoutMs int64
-	runtime   int64
+	rate      int
+	burst     int
+	timeoutMs int
+	runtime   int
 	url       string
 }
 
@@ -71,8 +71,6 @@ func sendRequest(config LoadGenConfig) {
 	case code := <-statusCode:
 		incStatusCodeCounter(code)
 	}
-
-	totalCounter.Incr(1)
 }
 
 func genLoad(config LoadGenConfig) {
@@ -83,25 +81,22 @@ func genLoad(config LoadGenConfig) {
 	for {
 		select {
 		case <-ticker.C:
-			for i := int64(0); i < config.burst; i++ {
+			for i := 0; i < config.burst; i++ {
+				totalCounter.Incr(1)
 				go sendRequest(config)
 			}
 		}
 	}
 }
 
-func init() {
-
-}
-
 func main() {
 
 	config = LoadGenConfig{}
 
-	flag.Int64Var(&config.rate, "rate", 1, "Rate")
-	flag.Int64Var(&config.burst, "burst", 1, "Burst")
-	flag.Int64Var(&config.runtime, "runtime", 60, "Run time")
-	flag.Int64Var(&config.timeoutMs, "timeout-ms", 1000, "time out in millisecond")
+	flag.IntVar(&config.rate, "rate", 1, "Rate")
+	flag.IntVar(&config.burst, "burst", 1, "Burst")
+	flag.IntVar(&config.runtime, "runtime", 60, "Run time")
+	flag.IntVar(&config.timeoutMs, "timeout-ms", 1000, "time out in millisecond")
 	flag.StringVar(&config.url, "url", "", "url to load test")
 
 	flag.Parse()
