@@ -72,7 +72,7 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if r.URL.Path == "/monitor" {
-		
+
 		log.Info("Handling monitor request.")
 
 		counters := utils.DumpCounter()
@@ -84,7 +84,6 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprint(w, string(b[:]))
 
-		
 	} else {
 		log.Infof("Page Not Found: %s", r.URL.Path)
 		w.WriteHeader(404)
