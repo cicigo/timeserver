@@ -18,9 +18,9 @@ var config = serverconfig.GetConfig()
 var setCookieCounter = utils.NewCounter("set-cookie")
 var getCookieCounter = utils.NewCounter("get-cookie")
 var noCookieCounter = utils.NewCounter("no-cookie")
-var auth200sCounter = utils.NewCounter("auth-200s")
-var auth400sCounter = utils.NewCounter("auth-400s")
-var auth404sCounter = utils.NewCounter("auth-404s")
+var auth200sCounter = utils.NewCounter("200s")
+var auth400sCounter = utils.NewCounter("400s")
+var auth404sCounter = utils.NewCounter("404s")
 
 func checkRequestParameter(p []string) bool {
 	return p != nil && len(p) > 0 && p[0] != ""
@@ -48,6 +48,7 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 
 	} else if r.URL.Path == "/set" {
 		log.Info("Handling PutCookie request.")
+		setCookieCounter.Incr(1)
 
 		r.ParseForm()
 		uuids := r.Form["cookie"]
@@ -70,6 +71,20 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 			auth200sCounter.Incr(1)
 		}
 
+	} else if r.URL.Path == "/monitor" {
+		
+		log.Info("Handling monitor request.")
+
+		counters := utils.DumpCounter()
+		b, error := json.Marshal(counters)
+		if error != nil {
+			log.Errorf("Failed to dump auth info: %s", error)
+			w.WriteHeader(500)
+			return
+		}
+		fmt.Fprint(w, string(b[:]))
+
+		
 	} else {
 		log.Infof("Page Not Found: %s", r.URL.Path)
 		w.WriteHeader(404)

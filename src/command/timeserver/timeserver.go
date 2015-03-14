@@ -8,6 +8,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	log "github.com/cihub/seelog"
 	"html"
@@ -26,8 +27,8 @@ var limiter = utils.NewLimiter(config.MaxInflight)
 var loginCounter = utils.NewCounter("login")
 var timeUserCounter = utils.NewCounter("time-user")
 var timeAnonCounter = utils.NewCounter("time-anon")
-var time200sCounter = utils.NewCounter("time-200s")
-var time404sCounter = utils.NewCounter("time-404s")
+var time200sCounter = utils.NewCounter("200s")
+var time404sCounter = utils.NewCounter("404s")
 
 const COOKIE_NAME string = "UUID"
 
@@ -181,6 +182,19 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	utils.RenderTemplate(w, config.Templates, "logout.html", nil)
 }
 
+func handleMonitor(w http.ResponseWriter, r *http.Request) {
+	log.Info("Handling monitor request.")
+
+	counters := utils.DumpCounter()
+	b, error := json.Marshal(counters)
+	if error != nil {
+		log.Errorf("Failed to dump auth info: %s", error)
+		w.WriteHeader(500)
+		return
+	}
+	fmt.Fprint(w, string(b[:]))
+}
+
 func main() {
 	if config.Version {
 		fmt.Println("2.0.0")
@@ -206,6 +220,7 @@ func main() {
 	http.HandleFunc("/index.html", handleHomePage)
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/logout", handleLogout)
+	http.HandleFunc("/monitor", handleMonitor)
 
 	error := http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
 	if error != nil {
