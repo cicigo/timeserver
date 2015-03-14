@@ -44,6 +44,11 @@
 	make authserver FLAGS="--checkpoint-interval 5 --dumpfile out/auth.json"
 ```
 
+### Run monitor server
+```
+	make monitor FLAGS="--targets http://localhost:8080,http://localhost:7070"	
+```
+
 ### Clean build
 ```
 	make clean
