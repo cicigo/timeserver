@@ -15,6 +15,13 @@ import (
 var concurrent_map = utils.NewConcurrentMap()
 var config = serverconfig.GetConfig()
 
+var setCookieCounter = utils.NewCounter("set-cookie")
+var getCookieCounter = utils.NewCounter("get-cookie")
+var noCookieCounter = utils.NewCounter("no-cookie")
+var auth200sCounter = utils.NewCounter("auth-200s")
+var auth400sCounter = utils.NewCounter("auth-400s")
+var auth404sCounter = utils.NewCounter("auth-404s")
+
 func checkRequestParameter(p []string) bool {
 	return p != nil && len(p) > 0 && p[0] != ""
 }
@@ -22,6 +29,7 @@ func checkRequestParameter(p []string) bool {
 func handleCookie(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/get" {
 		log.Info("Handling GetCookie request.")
+		getCookieCounter.Incr(1)
 		r.ParseForm()
 		uuids := r.Form["cookie"]
 		if checkRequestParameter(uuids) {
@@ -30,15 +38,17 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 
 			fmt.Fprint(w, name)
 			w.WriteHeader(200)
-
+			auth200sCounter.Incr(1)
 		} else {
 			log.Warnf("UUID is emtpy")
 			w.WriteHeader(400)
-
+			auth400sCounter.Incr(1)
+			noCookieCounter.Incr(1)
 		}
 
 	} else if r.URL.Path == "/set" {
 		log.Info("Handling PutCookie request.")
+
 		r.ParseForm()
 		uuids := r.Form["cookie"]
 		names := r.Form["name"]
@@ -46,21 +56,24 @@ func handleCookie(w http.ResponseWriter, r *http.Request) {
 		if uuids == nil || len(uuids) == 0 {
 			log.Warnf("UUID is empty.")
 			w.WriteHeader(400)
+			auth400sCounter.Incr(1)
 		} else if names == nil || len(names) == 0 {
 			log.Infof("Delete uuid %s.", uuids[0])
 			concurrent_map.Delete(uuids[0])
 			w.WriteHeader(200)
-
+			auth200sCounter.Incr(1)
 		} else {
 			log.Infof("Put name of uuid %s: %s", uuids[0], names[0])
 
 			concurrent_map.Put(uuids[0], names[0])
 			w.WriteHeader(200)
+			auth200sCounter.Incr(1)
 		}
 
 	} else {
 		log.Infof("Page Not Found: %s", r.URL.Path)
 		w.WriteHeader(404)
+		auth404sCounter.Incr(1)
 	}
 
 }

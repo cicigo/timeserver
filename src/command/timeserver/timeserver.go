@@ -23,6 +23,12 @@ var config = serverconfig.GetConfig()
 var authClient = utils.NewAuthClient(fmt.Sprintf("%s:%v", config.AuthHost, config.AuthPort))
 var limiter = utils.NewLimiter(config.MaxInflight)
 
+var loginCounter = utils.NewCounter("login")
+var timeUserCounter = utils.NewCounter("time-user")
+var timeAnonCounter = utils.NewCounter("time-anon")
+var time200sCounter = utils.NewCounter("time-200s")
+var time404sCounter = utils.NewCounter("time-404s")
+
 const COOKIE_NAME string = "UUID"
 
 type TimeContent struct {
@@ -68,12 +74,21 @@ func handleTime(w http.ResponseWriter, r *http.Request) {
 		Name:    name,
 	}
 
+	if name != "" {
+		timeUserCounter.Incr(1)
+	} else {
+		timeAnonCounter.Incr(1)
+	}
+	time200sCounter.Incr(1)
+
 	utils.RenderTemplate(w, config.Templates, "time.html", timeContent)
 }
 
 //handleNotFound: customarized 404 page for non-time request
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Handling NotFound URL: %s\n", r.URL.Path)
+	time404sCounter.Incr(1)
+
 	w.WriteHeader(404)
 	utils.RenderTemplate(w, config.Templates, "notfound.html", nil)
 }
@@ -101,6 +116,7 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 	}
 
+	time200sCounter.Incr(1)
 	if name == "" {
 		utils.RenderTemplate(w, config.Templates, "login.html", nil)
 	} else {
@@ -110,6 +126,8 @@ func handleHomePage(w http.ResponseWriter, r *http.Request) {
 
 // login page handler
 func handleLogin(w http.ResponseWriter, r *http.Request) {
+	loginCounter.Incr(1)
+
 	if !limiter.Get() {
 		w.WriteHeader(500)
 		return
@@ -120,6 +138,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	name := html.EscapeString(r.FormValue("name"))
 	if name == "" {
 		log.Info("log in name is empty")
+		time200sCounter.Incr(1)
 		utils.RenderTemplate(w, config.Templates, "emptyname.html", nil)
 	} else {
 		log.Infof("log in name is %s.", name)
@@ -157,6 +176,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	cookie := http.Cookie{Name: COOKIE_NAME, MaxAge: -1}
 	http.SetCookie(w, &cookie)
 
+	time200sCounter.Incr(1)
 	// display goodbye message
 	utils.RenderTemplate(w, config.Templates, "logout.html", nil)
 }
